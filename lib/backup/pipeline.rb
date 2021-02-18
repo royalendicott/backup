@@ -50,6 +50,7 @@ module Backup
     # If `#success?` returns `false`, use `#error_messages` to get an error report.
     def run
       Open4.popen4(pipeline) do |_pid, _stdin, stdout, stderr|
+        @stderr = stderr.read.strip
         pipestatus = stdout.read.delete("\n").split(":").sort
         pipestatus.each do |status|
           index, exitstatus = status.split("|").map(&:to_i)
@@ -59,7 +60,6 @@ module Backup
             "'#{command}' returned exit code: #{exitstatus}", exitstatus
           )
         end
-        @stderr = stderr.read.strip
       end
       Logger.warn(stderr_messages) if success? && stderr_messages
     rescue Exception => err
